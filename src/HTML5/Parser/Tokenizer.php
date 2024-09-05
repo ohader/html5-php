@@ -143,9 +143,13 @@ class Tokenizer
             } elseif ($this->is_alpha($tok)) {
                 $this->tagName();
             } else {
+                // https://html.spec.whatwg.org/multipage/parsing.html#tag-open-state
+                // 13.2.5.6 Tag open state
+                // This is an invalid-first-character-of-tag-name parse error. Emit a U+003C LESS-THAN SIGN character token. Reconsume in the data state.
                 $this->parseError('Illegal tag opening');
-                // TODO is this necessary ?
-                $this->characterData();
+                $this->text('<');
+                $this->flushBuffer();
+                $this->scanner->unconsume();
             }
 
             $tok = $this->scanner->current();

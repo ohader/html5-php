@@ -524,16 +524,24 @@ class TokenizerTest extends \Masterminds\HTML5\Tests\TestCase
 
         $events = $this->parse('<span<>02</span>');
         $this->assertEventError($events->get(0));
-        $this->assertEventEquals('startTag', 'span', $events->get(1));
+        // @todo this is not parsed correctly yet, \Masterminds\HTML5\Parser\Tokenizer::consumeData combines tag open state and tag name state
+        // https://html.spec.whatwg.org/multipage/parsing.html#tag-name-state
+        // 13.2.5.8 Tag name state
+        // Anything else: Append the current input character to the current tag token's tag name.
+        $this->assertEventEquals('startTag', 'span<', $events->get(1));
         $this->assertEventError($events->get(2));
-        $this->assertEventEquals('text', '>02', $events->get(3));
+        $this->assertEventEquals('text', '02', $events->get(3));
         $this->assertEventEquals('endTag', 'span', $events->get(4));
         $this->assertEventEquals('eof', null, $events->get(5));
 
         $events = $this->parse('<p</p>');
         $this->assertEventError($events->get(0));
-        $this->assertEventEquals('startTag', 'p', $events->get(1));
-        $this->assertEventEquals('endTag', 'p', $events->get(2));
+        $this->assertEventEquals('startTag', 'p<', $events->get(1));
+        // @todo
+        // https://html.spec.whatwg.org/multipage/parsing.html#self-closing-start-tag-state
+        // when reading `/` it should be in 13.2.5.40 Self-closing start tag state
+        // `anything else` This is an unexpected-solidus-in-tag parse error. Reconsume in the before attribute name state.
+        $this->assertEventEquals('endTag', '', $events->get(2));
         $this->assertEventEquals('eof', null, $events->get(3));
 
         $events = $this->parse('<strong><WordPress</strong>');
